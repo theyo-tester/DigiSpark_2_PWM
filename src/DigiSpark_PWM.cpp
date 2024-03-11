@@ -200,8 +200,8 @@ uint8_t analogWritePWM(uint8_t pin, int val) {
 /// An object of type DigiSpark_PWM
 DigiSpark_PWM::DigiSpark_PWM() {
   _PWM_initialized = false;
-  usePB4 = true;
-  usePB1 = false;
+  _usePB4 = true;
+  _usePB1 = false;
 }
 
 /// \brief
@@ -217,8 +217,8 @@ DigiSpark_PWM::DigiSpark_PWM() {
 /// An object of type DigiSpark_PWM
 DigiSpark_PWM::DigiSpark_PWM(boolean withPB1, boolean withPB4) {
   _PWM_initialized = false;
-  usePB1 = withPB1;
-  usePB4 = withPB4;
+  _usePB1 = withPB1;
+  _usePB4 = withPB4;
 }
 
 /// \brief
@@ -234,11 +234,11 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0
 
   // initialize the Pin
   // will also disconect the pin from PWM output
-  if (usePB1) {
+  if (_usePB1) {
     pinMode(PB1, OUTPUT);
     digitalWrite(PB1, LOW);
   }
-  if (usePB4) {
+  if (_usePB4) {
     pinMode(PB4, OUTPUT);
     digitalWrite(PB4, LOW);
   }
@@ -265,7 +265,7 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0
   tccr |= _BV(CTC1);
 
   // PB1 =>> PWM Channel A
-  if(usePB1){
+  if(_usePB1){
     // enable Pulse Width Modulator channel A,
     // leave PIN_PB1 unconnected (will be connected in analogWrite)
     // set CTC1 to 1 to Clear Timer/Counter on Compare Match
@@ -274,7 +274,7 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0
     OCR1A = 0;
   }
   // PB4 =>> PWM Channel B
-  if(usePB4){
+  if(_usePB4){
     // enable Pulse Width Modulator channel B
     // connect PIN_PB4 to Pulse Width Modulator channel B
     // leave PIN_PB4 unconnected  (will be connected in analogWrite)
@@ -341,12 +341,12 @@ uint8_t DigiSpark_PWM::setDutyCycle(uint8_t dutyCyclePercentPB1, uint8_t dutyCyc
     return ERROR_NOT_INITIALIZED;
   }
   uint8_t retVal;
-  if(usePB1) {
+  if(_usePB1) {
     retVal=setDutyCycleAtPin(&dutyCyclePercentPB1,PB1);
     if(retVal!=0) return retVal;
     _dutyCyclePercentPB1=dutyCyclePercentPB1;
   }
-  if(usePB4) {
+  if(_usePB4) {
     retVal=setDutyCycleAtPin(&dutyCyclePercentPB4,PB4);
     if(retVal!=0) return retVal;
     _dutyCyclePercentPB4=dutyCyclePercentPB4;
@@ -368,8 +368,8 @@ uint8_t DigiSpark_PWM::setFrequency(uint32_t frequency) {
   _frequency = frequency;
 
   // temporarily deactivate PWM output
-  if(usePB1) digitalWrite(PB1, LOW);
-  if(usePB4) digitalWrite(PB4, LOW);
+  if(_usePB1) digitalWrite(PB1, LOW);
+  if(_usePB4) digitalWrite(PB4, LOW);
 
   // set new frequency for Timer 1
   _TOP_value = setTimer1Frequency(_frequency);
