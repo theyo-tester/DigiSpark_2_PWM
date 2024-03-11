@@ -1,15 +1,15 @@
 # DigiSpark_2_PWM
-*Original badges:<br>*
-[![arduino-library-badge](https://www.ardu-badge.com/badge/DigiSpark_PWM.svg?)](https://www.ardu-badge.com/DigiSpark_PWM)
-[![GitHub release](https://img.shields.io/github/release/soylentOrange/DigiSpark_PWM.svg)](https://github.com/soylentOrange/DigiSpark_PWM/releases)
-[![GitHub](https://img.shields.io/github/license/soylentOrange/DigiSpark_PWM)](https://github.com/soylentOrange/DigiSpark_PWM/blob/master/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/soylentOrange/DigiSpark_PWM)](https://github.com/soylentOrange/DigiSpark_PWM/issues)
+*Original badges:*
+[![arduino-library-badge](https://www.ardu-badge.com/badge/DigiSpark_PWM.svg?)](https://www.ardu-badge.com/DigiSpark_PWM)<br>
+[![GitHub release](https://img.shields.io/github/release/soylentOrange/DigiSpark_PWM.svg)](https://github.com/theyo-tester/DigiSpark_2_PWM/releases)
+[![GitHub](https://img.shields.io/github/license/soylentOrange/DigiSpark_PWM)](https://github.com/theyo-tester/DigiSpark_2_PWM/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/soylentOrange/DigiSpark_PWM)](https://github.com/theyo-tester/DigiSpark_2_PWM/issues)
 
 ---
 
 ## Abstract
-Forked from [Original Library](https://github.com/soylentOrange/DigiSpark_PWM)
-##### I liked this library and its idea, but I missed the option to have the hardware based PWM on ***2***** pins simultaneously. I modified how you specifiy the pins at initialisation and I introduced two different duty cycles for each pin separately. *Frequency can not be adjusted separately, only the duty cycle!* But this is, at least for my use cases, not needed.
+Forked from [soylentOrange/DigiSpark_PWM](https://github.com/soylentOrange/DigiSpark_PWM)
+##### I liked this library and its idea, but I missed the option of having the hardware based PWM on ***2***** pins simultaneously. I modified how you specifiy the pins at initialisation and I introduced two different duty cycles for each pin separately. *Frequency can not be adjusted separately, only the duty cycle!* But this is, at least for my use cases, not needed.
 This hardware-based Pulse-Width-Modulation (PWM) library enables you to use the Hardware-PWM on **Arduino AVR ATtiny85-based boards (Digispark)** using [**ATTinyCore**](https://github.com/SpenceKonde/ATTinyCore). The **Timer/Counter1** is used in _asynchronous mode_ to give a PWM-output on **Pin PB1** **AND**/or **Pin PB4** up to 500 kHz. The maximum resolution is **8-bit**, the effective resolution typically between **7-bit** and **8-bit**.
 
 **Please note:** If your board is working at 16Mhz (instead of 8Mhz), the ferquency set in this library will be **doubled**. This also applies to the original library. So whether you burn the bootloader to 8MHz or you just take this into account when setting the frequency
@@ -60,15 +60,12 @@ void setup() {
 
 void loop() {
   // nothing to do here, the LED will blink driven by the hardware PWM
-  // latter add your code and conditions which would lead to a global frequency and/or dutyCycle change;
-  // pwm.setDutyCycle(100,100)    //f.i. set full power on both outputs
 }
 ```
 
 ### Get example
 
-*This is not yet supported! By following this, you will get the example from the original Repo! Alternatively you just copy the example given above with copy paste into your sketch*<br>
-The example can be obtained from within the Arduino IDE in File->Examples->DigiSpark_PWM->DigiSpark_PWM_example.
+You will not find the example under the library as this is not an official Arduino library yet. Alternatively you just copy the example given above with copy paste into your sketch or look in the folder examples/DigiSpark_PWM_example
 
 ---
 
