@@ -1,7 +1,8 @@
 /// @file
 
 /* DigiSpark_PWM Library
-   soylentOrange - https://github.com/soylentOrange/DigiSpark_PWM
+   TheYo Tester - https://github.com/theyo-tester/DigiSpark_2_PWM
+   forked from soylentOrange - https://github.com/soylentOrange/DigiSpark_PWM Thank you soylentOrange!
 */
 
 #include "DigiSpark_PWM.h"
@@ -199,33 +200,25 @@ uint8_t analogWritePWM(uint8_t pin, int val) {
 /// An object of type DigiSpark_PWM
 DigiSpark_PWM::DigiSpark_PWM() {
   _PWM_initialized = false;
-  _pin = PIN_PB4;
+  usePB4 = true;
+  usePB1 = false;
 }
 
 /// \brief
 /// Constructor of DigiSpark_PWM
 /// \details
 /// This creates a DigiSpark_PWM object.
-/// Output of PWM will be mapped to given Pin
-/// Pin needs to be on TIMER1. Possible values are:
+/// Output of PWM will be mapped to given Pins
+/// Pins need to be on TIMER1. Possible values are:
 /// - PIN_B1 (the onboard LED is connected here)
 /// - PIN_B4
 /// Remember to call begin to actually use the PWM
 /// \return
 /// An object of type DigiSpark_PWM
-DigiSpark_PWM::DigiSpark_PWM(uint8_t pin) {
+DigiSpark_PWM::DigiSpark_PWM(boolean withPB1, boolean withPB4) {
   _PWM_initialized = false;
-  _pin = pin;
-}
-
-/// \brief
-/// get Pin
-/// \details
-/// Get Pin connected to PWM while creating the object
-/// \return
-/// An object of type DigiSpark_PWM
-uint8_t DigiSpark_PWM::getPin() {
-  return _pin;
+  usePB1 = withPB1;
+  usePB4 = withPB4;
 }
 
 /// \brief
@@ -237,64 +230,66 @@ uint8_t DigiSpark_PWM::getPin() {
 /// - PIN_B4
 /// \return
 /// 0 on success, an error otherwise
-uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercent) {
-
-  if ((_pin != PIN_B1) && (_pin != PIN_B4)) {
-    return ERROR_INVALID_PIN;
-  }
+uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0, uint8_t dutyCyclePercentPB4 = 0) {
 
   // initialize the Pin
   // will also disconect the pin from PWM output
-  pinMode(_pin, OUTPUT);
-  digitalWrite(_pin, LOW);
+  if (usePB1) {
+    pinMode(PB1, OUTPUT);
+    digitalWrite(PB1, LOW);
+  }
+  if (usePB4) {
+    pinMode(PB4, OUTPUT);
+    digitalWrite(PB4, LOW);
+  }
 
   // save Frequency
   _frequency = frequency;
 
   // save requested duty-cycle
-  _dutyCyclePercent = dutyCyclePercent;
+  _dutyCyclePercentPB1 = dutyCyclePercentPB1;
+  _dutyCyclePercentPB4 = dutyCyclePercentPB4;
   // check for bounds
-  if (_dutyCyclePercent > 100)
-    _dutyCyclePercent = 100;
+  if (_dutyCyclePercentPB1 > 100)
+    _dutyCyclePercentPB1 = 100;
+  if (_dutyCyclePercentPB4 > 100)
+    _dutyCyclePercentPB4 = 100;
 
   // set frequency for Timer 1
   _PWM_initialized = true;
   _TOP_value = setTimer1Frequency(_frequency);
 
-  // enable PWM (channel A or channel B on timer 1)
-  uint8_t timer = digitalPinToTimer(_pin);
-  if (timer == TIMER1A) {
+  // enable PWM (channel A and/or channel B on timer 1)
+  uint8_t tccr = TCCR1;
+  tccr &= 0x0F;
+  tccr |= _BV(CTC1);
 
+  // PB1 =>> PWM Channel A
+  if(usePB1){
     // enable Pulse Width Modulator channel A,
     // leave PIN_PB1 unconnected (will be connected in analogWrite)
     // set CTC1 to 1 to Clear Timer/Counter on Compare Match
-    uint8_t tccr = TCCR1;
-    tccr &= 0x0F;
-    tccr |= _BV(CTC1) | _BV(PWM1A);
-    TCCR1 = tccr;
-    // disable channel B
-    GTCCR = 0;
+    tccr |= _BV(PWM1A);
     // set compare register to zero for now
     OCR1A = 0;
-  } else if (timer == TIMER1B) {
-
-    // set CTC1 to 1 to Clear Timer/Counter on Compare Match
-    // (will also disable channel A)
-    uint8_t tccr = TCCR1;
-    tccr &= 0x0F;
-    tccr |= _BV(CTC1);
-    TCCR1 = tccr;
+  }
+  // PB4 =>> PWM Channel B
+  if(usePB4){
     // enable Pulse Width Modulator channel B
     // connect PIN_PB4 to Pulse Width Modulator channel B
     // leave PIN_PB4 unconnected  (will be connected in analogWrite)
     GTCCR = _BV(PWM1B);
     // set compare register to zero for now
     OCR1B = 0;
+  } else {
+    // disable channel B if PB4 is not active
+    GTCCR = 0;
   }
+  TCCR1 = tccr;   // finally write back the configured register
 
   // set duty-cycle and connect pin
   uint8_t err = 0;
-  if (err = setDutyCycle(_dutyCyclePercent)) {
+  if ((err = setDutyCycle(_dutyCyclePercentPB1,_dutyCyclePercentPB4))) {
     _PWM_initialized = false;
     return err;
   } else {
@@ -303,41 +298,60 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercent) {
 }
 
 /// \brief
-/// setDutyCycle
+/// setDutyCycleAtPin
 /// \details
-/// sets the duty cycle gien in percent
+/// will only be used internal (protected) 
 /// \return
 /// 0 on success, an error otherwise
-uint8_t DigiSpark_PWM::setDutyCycle(uint8_t dutyCyclePercent) {
+uint8_t DigiSpark_PWM::setDutyCycleAtPin(uint8_t* dutyCyclePercent,uint8_t pin) {
+  if (*dutyCyclePercent == 0) {
+    // set pin to LOW, when DC should be 0%
+    // digital write also deactivates PWM
+    digitalWrite(pin, LOW);
+    *dutyCyclePercent=0;
+    return 0;
+  } else if (*dutyCyclePercent >= 100) {
+    // set pin to HIGH, when DC should be 100%
+    // digital write also deactivates PWM
+    digitalWrite(pin, HIGH);
+    *dutyCyclePercent=100;
+    return 0;
+  }
+  
+  // map duty-cycle from 0-100% range to compare value
+  uint8_t analogValue;
+  analogValue = map(*dutyCyclePercent, 0, 100, 0, _TOP_value);
+
+  // set comapare value via analog write
+  return analogWritePWM(pin, analogValue);
+}
+
+/// \brief
+/// setDutyCycle
+/// \details
+/// sets the duty cycle given in percent 
+/// First parameter: duty cycle on PB1
+/// Second parameter: duty cycle on PB4
+/// If pin PB1 is not used, you can just specicy 0 for the first parameter, it will be ignored
+/// If only pin PB1 is used, you can just pass the first parameter
+/// \return
+/// 0 on success, an error otherwise
+uint8_t DigiSpark_PWM::setDutyCycle(uint8_t dutyCyclePercentPB1, uint8_t dutyCyclePercentPB4) {
   if (!_PWM_initialized) {
     return ERROR_NOT_INITIALIZED;
   }
-
-  if ((_pin != PIN_B1) && (_pin != PIN_B4)) {
-    return ERROR_INVALID_PIN;
+  uint8_t retVal;
+  if(usePB1) {
+    retVal=setDutyCycleAtPin(&dutyCyclePercentPB1,PB1);
+    if(retVal!=0) return retVal;
+    _dutyCyclePercentPB1=dutyCyclePercentPB1;
   }
-
-  // catch border cases
-  if (dutyCyclePercent == 0) {
-    // set pin to LOW, when DC should be 0%
-    // digital write also deactivates PWM
-    digitalWrite(_pin, LOW);
-    _dutyCyclePercent = 0;
-    return 0;
-  } else if (dutyCyclePercent >= 100) {
-    // set pin to HIGH, when DC should be 100%
-    // digital write also deactivates PWM
-    digitalWrite(_pin, HIGH);
-    _dutyCyclePercent = 100;
-    return 0;
+  if(usePB4) {
+    retVal=setDutyCycleAtPin(&dutyCyclePercentPB4,PB4);
+    if(retVal!=0) return retVal;
+    _dutyCyclePercentPB4=dutyCyclePercentPB4;
   }
-
-  // map duty-cycle from 0-100% range to compare value
-  uint8_t analogValue;
-  analogValue = map(dutyCyclePercent, 0, 100, 0, _TOP_value);
-
-  // set comapare value via analog write
-  return analogWritePWM(_pin, analogValue);
+  return 0;
 }
 
 /// \brief
@@ -350,19 +364,16 @@ uint8_t DigiSpark_PWM::setFrequency(uint32_t frequency) {
   if (!_PWM_initialized)
     return ERROR_NOT_INITIALIZED;
 
-  if ((_pin != PIN_B1) && (_pin != PIN_B4)) {
-    return ERROR_INVALID_PIN;
-  }
-
   // save Frequency
   _frequency = frequency;
 
   // temporarily deactivate PWM output
-  digitalWrite(_pin, LOW);
+  if(usePB1) digitalWrite(PB1, LOW);
+  if(usePB4) digitalWrite(PB4, LOW);
 
   // set new frequency for Timer 1
   _TOP_value = setTimer1Frequency(_frequency);
 
   // set duty-cycle (using updated TOP-value)
-  return setDutyCycle(_dutyCyclePercent);
+  return setDutyCycle(_dutyCyclePercentPB1,_dutyCyclePercentPB4);
 }
