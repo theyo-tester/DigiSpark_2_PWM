@@ -231,7 +231,7 @@ DigiSpark_PWM::DigiSpark_PWM(boolean withPB1, boolean withPB4) {
 /// - PIN_B4
 /// \return
 /// 0 on success, an error otherwise
-uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0, uint8_t dutyCyclePercentPB4 = 0) {
+uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1, uint8_t dutyCyclePercentPB4) {
 
   // initialize the Pin
   // will also disconect the pin from PWM output
