@@ -1,3 +1,4 @@
+
 /// @file
 
 /* DigiSpark_PWM Library
@@ -297,6 +298,12 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1 = 0
   }
 }
 
+float map_f(long x, long in_min, long in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+
 /// \brief
 /// setDutyCycleAtPin
 /// \details
@@ -318,9 +325,9 @@ uint8_t DigiSpark_PWM::setDutyCycleAtPin(uint8_t* dutyCyclePercent,uint8_t pin) 
     return 0;
   }
   
-  // map duty-cycle from 0-100% range to compare value
+  // map duty-cycle from 0-max_duty_cycle range to compare value
   uint8_t analogValue;
-  analogValue = map(*dutyCyclePercent, 0, 100, 0, _TOP_value);
+  analogValue = ceil(map_f(*dutyCyclePercent, 0.0, max_duty_cycle, 0, _TOP_value));
 
   // set comapare value via analog write
   return analogWritePWM(pin, analogValue);
