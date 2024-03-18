@@ -24,6 +24,7 @@ protected:
   bool _PWM_initialized;
   bool _usePB1;
   bool _usePB4;
+  uint8_t max_duty_cycle{100};
   uint8_t setDutyCycleAtPin(uint8_t* i_dutyCyclePercent,uint8_t pin);
 
 public:
