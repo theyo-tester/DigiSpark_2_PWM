@@ -251,10 +251,10 @@ uint8_t DigiSpark_PWM::begin(uint32_t frequency, uint8_t dutyCyclePercentPB1, ui
   _dutyCyclePercentPB1 = dutyCyclePercentPB1;
   _dutyCyclePercentPB4 = dutyCyclePercentPB4;
   // check for bounds
-  if (_dutyCyclePercentPB1 > 100)
-    _dutyCyclePercentPB1 = 100;
-  if (_dutyCyclePercentPB4 > 100)
-    _dutyCyclePercentPB4 = 100;
+  if (_dutyCyclePercentPB1 > max_duty_cycle)
+    _dutyCyclePercentPB1 = max_duty_cycle;
+  if (_dutyCyclePercentPB4 > max_duty_cycle)
+    _dutyCyclePercentPB4 = max_duty_cycle;
 
   // set frequency for Timer 1
   _PWM_initialized = true;
