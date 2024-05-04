@@ -317,11 +317,11 @@ uint8_t DigiSpark_PWM::setDutyCycleAtPin(uint8_t* dutyCyclePercent,uint8_t pin) 
     digitalWrite(pin, LOW);
     *dutyCyclePercent=0;
     return 0;
-  } else if (*dutyCyclePercent >= 100) {
-    // set pin to HIGH, when DC should be 100%
+  } else if (*dutyCyclePercent >= max_duty_cycle) {
+    // set pin to HIGH, when DC should be max_duty_cycle
     // digital write also deactivates PWM
     digitalWrite(pin, HIGH);
-    *dutyCyclePercent=100;
+    *dutyCyclePercent=max_duty_cycle;
     return 0;
   }
   
